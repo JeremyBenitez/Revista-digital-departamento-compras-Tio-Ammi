@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: tioammi-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - tioammi-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: proyectocatalogo-backend2
+    container_name: tioammi-backend
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    environment:
+      - MONGO_URL=mongodb://mongodb:27017/qr_catalog_db
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - tioammi-network
+
+  frontend:
+    image: proyectocatalogo-frontend2
+    container_name: tioammi-frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      - VITE_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - tioammi-network
+
+networks:
+  tioammi-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local

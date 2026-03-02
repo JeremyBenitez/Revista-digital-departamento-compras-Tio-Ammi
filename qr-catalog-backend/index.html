@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Catálogo Tío Ammi - Imágenes</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; text-align: center; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #d32f2f; }
+        #lista-imagenes img { width: 100%; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; }
+        .btn-like { background: #e91e63; color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-size: 16px; margin: 20px 0; }
+        .form-feedback { background: #f9f9f9; padding: 15px; border-radius: 10px; margin-top: 20px; }
+        input, textarea { width: 90%; padding: 10px; margin: 5px 0; border-radius: 5px; border: 1px solid #ccc; }
+    </style>
+</head>
+<body>
+
+
+    <div class="container">
+        <h1 id="title">Cargando...</h1>
+        <p id="info"></p>
+        
+        <div id="lista-imagenes"></div>
+
+        <div style="display: flex; justify-content: center; gap: 10px;">
+            <button class="btn-like" onclick="darLike()">❤️ Me gusta</button>
+            <button class="btn-like" style="background: #546e7a;" onclick="darDislike()">👎 No me gusta</button>
+        </div>
+
+        <div class="form-feedback">
+            <h3>¿Qué te pareció?</h3>
+            <input type="number" id="rating" placeholder="Estrellas (1-5)" min="1" max="5">
+            <textarea id="comment" placeholder="Tu comentario..."></textarea>
+            <button style="background:#25d366; color:white; border:none; padding:10px; width:100%; border-radius:5px; cursor:pointer;" 
+                    onclick="enviarFeedback()">Enviar a WhatsApp</button>
+        </div>
+    </div>
+
+    <hr>
+        <div id="seccion-historial" style="margin-top: 30px; text-align: left;">
+            <h3>Ediciones Anteriores</h3>
+            <div id="lista-historial">Cargando historial...</div>
+        </div>
+
+    <script>
+let catalogId = "";
+        const API_BASE = "http://10.100.39.30:8000"; // Cambia a tu IP si pruebas desde otra PC
+
+        // 1. Cargar el Catálogo Activo (El último subido)
+        async function loadCurrentCatalog() {
+            try {
+                const res = await fetch(`${API_BASE}/catalog/current`);
+                const data = await res.json();
+                
+                if(data._id) {
+                    catalogId = data._id;
+                    document.getElementById('title').innerText = data.name;
+                    document.getElementById('info').innerText = `${data.month} ${data.year}`;
+                    
+                    const container = document.getElementById('lista-imagenes');
+                    container.innerHTML = ""; // Limpiar contenedor
+
+                    // Dibujar todas las imágenes una debajo de otra
+                    data.images.forEach(imgUrl => {
+                        const img = document.createElement('img');
+                        img.src = `${API_BASE}${imgUrl}`;
+                        container.appendChild(img);
+                    });
+
+                    // Llamar al historial una vez que cargue el principal
+                    await loadHistory();
+                } else {
+                    document.getElementById('title').innerText = "No hay catálogos activos";
+                }
+            } catch (err) {
+                console.error("Error cargando catálogo:", err);
+                document.getElementById('title').innerText = "Error de conexión con el servidor";
+            }
+        }
+
+        // 2. Cargar el Historial de Catálogos (Los que tienen is_active: false)
+        async function loadHistory() {
+            try {
+                const res = await fetch(`${API_BASE}/catalog/history`);
+                const history = await res.json();
+                const divHistorial = document.getElementById('lista-historial');
+                
+                if (!history || history.length === 0) {
+                    divHistorial.innerHTML = "<p style='color:gray;'>No hay ediciones anteriores.</p>";
+                    return;
+                }
+
+                let html = "<ul style='list-style: none; padding: 0;'>";
+                history.forEach((cat, index) => {
+                    // Convertimos el array de imágenes a una cadena de texto para pasarla por la función
+                    const imagesJson = JSON.stringify(cat.images);
+                    
+                    html += `
+                    <li onclick='mostrarCatalogoAntiguo("${cat._id}", "${cat.name}", ${imagesJson})' 
+                        style="padding: 15px; border-bottom: 1px solid #eee; background: #fff; margin-bottom: 8px; border-radius: 8px; cursor: pointer; transition: 0.3s;"
+                        onmouseover="this.style.background='#f0f0f0'" 
+                        onmouseout="this.style.background='#fff'">
+                        <strong style="color: #333;">${cat.name}</strong><br>
+                        <span style="font-size: 0.9em; color: #666;">${cat.month} ${cat.year}</span>
+                    </li>`;
+                });
+                html += "</ul>";
+                divHistorial.innerHTML = html;
+            } catch (err) {
+                console.error("Error:", err);
+            }
+        }
+
+        function mostrarCatalogoAntiguo(id, nombre, imagenes) {
+            // 1. Actualizar el ID actual para que los likes/feedback vayan a este catálogo viejo
+            catalogId = id;
+            
+            // 2. Cambiar el título
+            document.getElementById('title').innerText = nombre;
+            document.getElementById('info').innerText = "(Edición Anterior)";
+
+            // 3. Renderizar las imágenes de este catálogo específico
+            const container = document.getElementById('lista-imagenes');
+            container.innerHTML = ""; // Limpiamos las fotos actuales
+
+            if (imagenes && imagenes.length > 0) {
+                imagenes.forEach(imgUrl => {
+                    const img = document.createElement('img');
+                    img.src = `${API_BASE}${imgUrl}`;
+                    container.appendChild(img);
+                });
+                // Scroll hacia arriba para que el usuario vea el inicio del catálogo
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                container.innerHTML = "<p>Este catálogo no tiene imágenes disponibles.</p>";
+            }
+        }
+
+
+        // 3. Registrar Like
+        async function darLike() {
+            if(!catalogId) return;
+            try {
+                const res = await fetch(`${API_BASE}/catalog/${catalogId}/like`, {method: 'POST'});
+                if(res.ok) alert("❤️ ¡Gracias! Te gusta este catálogo.");
+            } catch (err) {
+                alert("Error al registrar el like.");
+            }
+        }
+
+        async function darDislike() {
+            if(!catalogId) return;
+            try {
+                const res = await fetch(`${API_BASE}/catalog/${catalogId}/dislike`, {method: 'POST'});
+                if(res.ok) alert("Entendido, gracias por tu feedback.");
+            } catch (err) {
+                alert("Error al registrar el dislike.");
+            }
+        }
+
+        // 4. Enviar Feedback y abrir WhatsApp
+        async function enviarFeedback() {
+            if(!catalogId) return;
+            
+            const r = document.getElementById('rating').value;
+            const c = document.getElementById('comment').value;
+
+            if(!r || !c) {
+                alert("Por favor, califica con estrellas y escribe un comentario.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('rating', r);
+            formData.append('comment', c);
+
+            try {
+                const res = await fetch(`${API_BASE}/catalog/${catalogId}/feedback`, {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                
+                // Redirigir a WhatsApp
+                if(data.whatsapp_link) {
+                    window.location.href = data.whatsapp_link;
+                }
+            } catch (err) {
+                console.error("Error al enviar feedback:", err);
+                alert("Hubo un problema al conectar con WhatsApp.");
+            }
+        }
+        loadCurrentCatalog();
+    </script>
+</body>
+</html>
