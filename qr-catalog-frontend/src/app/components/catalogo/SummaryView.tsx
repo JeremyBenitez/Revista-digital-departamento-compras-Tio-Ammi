@@ -75,7 +75,7 @@ export function SummaryView({
             <CheckCircle2 className="w-20 h-20 text-green-500 mx-auto mb-4" />
           </motion.div>
           <h2 className="text-3xl mb-2 font-bold text-gray-800">¡Gracias por tu opinión!</h2>
-          <p className="text-gray-600">Revisa tus votos y cuéntanos qué te pareció el catálogo</p>
+          <p className="text-gray-600">Revisa tus votos y cuéntanos qué te pareció la revista.</p>
         </div>
 
         {/* VOTOS POR CADA FOTO */}
@@ -144,7 +144,7 @@ export function SummaryView({
         <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 mb-6">
           <h3 className="font-bold mb-4 text-xl text-gray-800 flex items-center gap-2">
             <Heart className="w-5 h-5 text-[#D51F2D]" />
-            ¿Qué te pareció el catálogo en general?
+            ¿Qué te pareció la revista?
           </h3>
           
           <div className="flex gap-4 mb-4">

@@ -31,70 +31,72 @@ export function ContentSection({
   const photoNumber = photoId.split('_').pop();
 
   return (
-    <div className="p-3 sm:p-4 bg-white border-t border-gray-100 flex-shrink-0">
+    <div className="p-1.5 sm:p-2 bg-white border-t border-gray-100 flex-shrink-0">
       
-      {/* Título y fecha */}
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <Star className="w-4 h-4 sm:w-5 sm:h-5 text-[#D51F2D] fill-[#D51F2D]" />
-          <h2 className="text-base sm:text-lg font-bold text-gray-800">{lookName}</h2>
+      {/* Título y fecha - línea única */}
+      <div className="flex items-center justify-between mb-1">
+        <div className="flex items-center gap-1 min-w-0">
+          <Star className="w-3.5 h-3.5 text-[#D51F2D] fill-[#D51F2D] flex-shrink-0" />
+          <h2 className="text-xs sm:text-sm font-bold text-gray-800 truncate max-w-[100px] sm:max-w-[150px]">
+            {lookName}
+          </h2>
         </div>
-        <span className="text-xs sm:text-sm text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+        <span className="text-[10px] sm:text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded-full whitespace-nowrap ml-1">
           {lookMonth} {lookYear}
         </span>
       </div>
 
-      {/* Stats de ESTA foto - CON NÚMEROS REALES */}
-      <div className="flex gap-2 mb-3">
-        <div className="bg-blue-50 text-blue-600 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-          <Eye className="w-3 h-3" />
+      {/* Stats ultra compactos */}
+      <div className="flex gap-1 mb-1.5">
+        <div className="bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-0.5">
+          <Eye className="w-2.5 h-2.5" />
           <span>{views}</span>
         </div>
-        <div className="bg-green-50 text-green-600 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-          <ThumbsUp className="w-3 h-3" />
+        <div className="bg-green-50 text-green-600 px-1.5 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-0.5">
+          <ThumbsUp className="w-2.5 h-2.5" />
           <span>{photoLikes}</span>
         </div>
-        <div className="bg-red-50 text-red-600 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-          <ThumbsDown className="w-3 h-3" />
+        <div className="bg-red-50 text-red-600 px-1.5 py-0.5 rounded-full text-[10px] font-medium flex items-center gap-0.5">
+          <ThumbsDown className="w-2.5 h-2.5" />
           <span>{photoDislikes}</span>
         </div>
       </div>
 
-      {/* Botones para votar por ESTA foto */}
-      <div className="flex gap-2 mb-3">
+      {/* Botones ultra compactos */}
+      <div className="flex gap-1 mb-1">
         <button
           onClick={() => onVote("like")}
-          className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 text-sm font-medium ${
+          className={`flex-1 py-1 rounded-md flex items-center justify-center gap-1 text-[10px] sm:text-xs font-medium transition-all ${
             userVote === 'like'
-              ? 'bg-green-500 text-white shadow-md'
+              ? 'bg-green-500 text-white'
               : 'bg-green-50 text-green-600 hover:bg-green-100 border border-green-200'
           }`}
         >
-          <ThumbsUp className="w-4 h-4" />
+          <ThumbsUp className="w-3 h-3" />
           <span>Me gusta</span>
         </button>
         
         <button
           onClick={() => onVote("dislike")}
-          className={`flex-1 py-2 rounded-lg flex items-center justify-center gap-2 transition-all transform active:scale-95 text-sm font-medium ${
+          className={`flex-1 py-1 rounded-md flex items-center justify-center gap-1 text-[10px] sm:text-xs font-medium transition-all ${
             userVote === 'dislike'
-              ? 'bg-red-500 text-white shadow-md'
+              ? 'bg-red-500 text-white'
               : 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200'
           }`}
         >
-          <ThumbsDown className="w-4 h-4" />
+          <ThumbsDown className="w-3 h-3" />
           <span>No me gusta</span>
         </button>
       </div>
 
-      {/* Botón Saltar */}
-      <div className="flex justify-center">
+      {/* Botón Saltar ultra pequeño */}
+      <div className="flex justify-end">
         <button
           onClick={onSkip}
-          className="text-xs text-gray-500 hover:text-gray-700 px-4 py-1 rounded-lg transition-colors flex items-center gap-1"
+          className="text-[15px] sm:text-[12px] text-gray-400 hover:text-gray-700 px-2 cursor-pointer py-0.5 rounded flex items-center gap-0.5"
         >
           {isLastLook ? 'Finalizar' : 'Saltar'}
-          <ChevronRight className="w-3 h-3" />
+          <ChevronRight className="w-2 h-2" />
         </button>
       </div>
     </div>

@@ -11,7 +11,12 @@ import { SummaryView } from "./SummaryView";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://172.21.250.6:8001';
 
-export default function CatalogoContainer({ onBack }: { onBack: () => void }) {
+interface CatalogoContainerProps {
+  onBack: () => void;
+  showBackButton?: boolean; // 👈 NUEVA PROP PARA CONTROLAR EL BOTÓN
+}
+
+export default function CatalogoContainer({ onBack, showBackButton = true }: CatalogoContainerProps) {
   // Estados principales
   const [currentIndex, setCurrentIndex] = useState(0);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -464,6 +469,7 @@ export default function CatalogoContainer({ onBack }: { onBack: () => void }) {
             <CatalogHeader 
               title={activeCatalog.title}
               onBack={onBack}
+              showBackButton={showBackButton} // 👈 PASAMOS LA PROP AL HEADER
               historicalCatalogs={historicalCatalogs}
               activeCatalog={activeCatalog}
               onSelectCatalog={loadHistoricalCatalog}
@@ -538,8 +544,8 @@ export default function CatalogoContainer({ onBack }: { onBack: () => void }) {
                   <span>Anterior</span>
                 </motion.button>
               )}
-              <div className="text-white/70 text-xs sm:text-sm block md:hidden">Desliza para cambiar</div>
-              <div className="hidden md:block text-white/50 text-xs">{currentIndex + 1} / {looks.length}</div>
+              {/* <div className="text-white/70 text-xs sm:text-sm block md:hidden">Desliza para cambiar</div>
+              <div className="hidden md:block text-white/50 text-xs">{currentIndex + 1} / {looks.length}</div> */}
             </div>
           </>
         )}

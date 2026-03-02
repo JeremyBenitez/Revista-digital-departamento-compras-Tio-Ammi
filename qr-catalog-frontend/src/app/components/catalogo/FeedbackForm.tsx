@@ -58,7 +58,7 @@ export function FeedbackForm({
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-3">
-            ¿Qué tan satisfecho estás con nuestro catálogo?
+            ¿Qué tan satisfecho estás con nuestra Revista?
           </label>
           <div className="flex justify-center gap-2">
             {[1, 2, 3, 4, 5].map((star) => (
@@ -91,7 +91,7 @@ export function FeedbackForm({
           <textarea
             value={comentarios}
             onChange={(e) => onComentariosChange(e.target.value)}
-            placeholder="Cuéntanos qué te pareció nuestro catálogo..."
+            placeholder="Cuéntanos qué te pareció nuestra revista..."
             rows={4}
             className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#28336C] focus:outline-none transition-colors resize-none"
           />

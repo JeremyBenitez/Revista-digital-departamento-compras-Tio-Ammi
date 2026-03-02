@@ -5,6 +5,7 @@ import { ArrowLeft, Calendar } from "lucide-react";
 interface CatalogHeaderProps {
   title: string;
   onBack: () => void;
+  showBackButton?: boolean; // Nueva prop
   historicalCatalogs: any[];
   activeCatalog: any;
   onSelectCatalog: (catalog: any, index: number) => void;
@@ -14,6 +15,7 @@ interface CatalogHeaderProps {
 export function CatalogHeader({ 
   title, 
   onBack, 
+  showBackButton = true, // Por defecto true para compatibilidad
   historicalCatalogs, 
   activeCatalog, 
   onSelectCatalog, 
@@ -26,23 +28,30 @@ export function CatalogHeader({
       className="flex-shrink-0 mb-3 sm:mb-4"
     >
       <div className="flex items-center justify-between mb-3">
-        <button
-          onClick={onBack}
-          className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
-        >
-          <ArrowLeft className="w-5 h-5" />
-        </button>
+        {/* Botón de retroceso condicional */}
+        {showBackButton ? (
+          <button
+            onClick={onBack}
+            className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        ) : (
+          <div className="w-8"></div> // Espaciador para mantener el título centrado
+        )}
         
         <h1 className="text-lg sm:text-xl md:text-2xl text-white font-bold">
           {title}
         </h1>
         
-        <div className="w-8"></div>
+        <div className="w-8"></div> {/* Espaciador del lado derecho */}
       </div>
 
+      {/* Lista horizontal de catálogos históricos (se mantiene igual) */}
       {historicalCatalogs.length > 0 && (
         <div className="mb-2 overflow-x-auto pb-1 hide-scrollbar">
           <div className="flex gap-1.5 justify-center">
+            {/* Botón del catálogo actual */}
             <button
               onClick={onSelectCurrent}
               className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
@@ -54,6 +63,7 @@ export function CatalogHeader({
               Actual
             </button>
 
+            {/* Botones de catálogos históricos */}
             {historicalCatalogs.map((catalog, index) => (
               <button
                 key={catalog.id}

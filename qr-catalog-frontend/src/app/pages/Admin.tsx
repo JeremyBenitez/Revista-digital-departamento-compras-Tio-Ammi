@@ -10,11 +10,12 @@ import {
   UploadCloud,
   Calendar,
   Eye,
-  EyeOff
+  BookOpen
 } from "lucide-react";
 
 interface AdminProps {
   onBack: () => void;
+  onViewCatalog: () => void; // Prop para navegar a la revista
 }
 
 interface Catalog {
@@ -31,10 +32,9 @@ interface Catalog {
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://172.21.250.6:8001';
-
 const UPLOAD_URL = `${API_BASE_URL}/upload-catalog/`;
 
-export default function Admin({ onBack }: AdminProps) {
+export default function Admin({ onBack, onViewCatalog }: AdminProps) {
   // Estados para el formulario de creación
   const [name, setName] = useState("");
   const [month, setMonth] = useState("");
@@ -183,14 +183,13 @@ export default function Admin({ onBack }: AdminProps) {
   };
 
   const moveDown = (idx: number) => {
+    if (idx >= prev.length - 1) return prev;
     setFiles((prev) => {
-      if (idx >= prev.length - 1) return prev;
       const arr = [...prev];
       [arr[idx + 1], arr[idx]] = [arr[idx], arr[idx + 1]];
       return arr;
     });
     setPreviews((prev) => {
-      if (idx >= prev.length - 1) return prev;
       const arr = [...prev];
       [arr[idx + 1], arr[idx]] = [arr[idx], arr[idx + 1]];
       return arr;
@@ -271,11 +270,23 @@ export default function Admin({ onBack }: AdminProps) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#28336C] via-[#28336C] to-[#D51F2D] flex items-start justify-center p-6 pt-12">
       <div className="max-w-6xl w-full">
-        <div className="flex items-center gap-4 mb-6">
-          <button onClick={onBack} className="text-white/90 hover:text-white p-2 rounded-full transition-colors">
-            <ArrowLeft className="w-6 h-6" />
+        {/* Header con botón de retroceso y botón Ver Revista */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <button onClick={onBack} className="text-white/90 hover:text-white p-2 rounded-full transition-colors">
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
+          </div>
+          
+          {/* Botón para ver la revista */}
+          <button
+            onClick={onViewCatalog}
+            className="bg-white/10 hover:bg-white/20 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-all hover:scale-105"
+          >
+            <BookOpen className="w-5 h-5" />
+            <span>Revista</span>
           </button>
-          <h1 className="text-2xl font-bold text-white">Panel de Administración</h1>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -458,7 +469,7 @@ export default function Admin({ onBack }: AdminProps) {
             ) : catalogs.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <Calendar className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                <p>No hay catálogos disponibles</p>
+                <p>No hay revistas disponibles</p>
               </div>
             ) : (
               <div className="space-y-3 max-h-[600px] overflow-y-auto pr-2">

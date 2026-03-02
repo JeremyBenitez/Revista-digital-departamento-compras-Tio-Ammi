@@ -1,17 +1,17 @@
 import { QRCodeSVG } from "qrcode.react";
 import { motion } from "motion/react";
-import { BookOpen, UploadCloud } from "lucide-react";
+import { UploadCloud } from "lucide-react"; // 👈 Eliminamos BookOpen
 import { useEffect, useState } from "react";
 
 const tioLogo = new URL("../../img/tio_logo.ico", import.meta.url).href;
 
 interface HomeProps {
-  onNavigate: () => void;
+  onNavigate: () => void; // Esta prop ya no se usará pero la mantenemos por si acaso
   onAdmin?: () => void;
 }
 
 export default function Home({ onNavigate, onAdmin }: HomeProps) {
-  const catalogoUrl = window.location.origin + "/catalogo";
+  const catalogoUrl = window.location.origin + "/revista";
   const [qrSize, setQrSize] = useState<number>(220);
 
   useEffect(() => {
@@ -19,7 +19,6 @@ export default function Home({ onNavigate, onAdmin }: HomeProps) {
       const w = window.innerWidth;
       const h = window.innerHeight;
       
-      // Ajustar QR size basado en la pantalla
       if (w < 640) {
         setQrSize(Math.min(180, h * 0.2));
       } else if (w < 1024) {
@@ -55,19 +54,18 @@ export default function Home({ onNavigate, onAdmin }: HomeProps) {
             />
           </motion.div>
 
-       {/* Título con Raleway - Versión recomendada */}
-<h1 className="font-['Raleway'] text-center mb-1 md:mb-2">
-  <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium text-white drop-shadow-2xl tracking-wide leading-tight">
-    Revista Digital
-  </span>
-  <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-white via-white to-white/80 bg-clip-text text-transparent tracking-wide">
-    TIO AMMI
-  </span>
-</h1>
+          <h1 className="font-['Raleway'] text-center mb-1 md:mb-2">
+            <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium text-white drop-shadow-2xl tracking-wide leading-tight">
+              Revista Digital
+            </span>
+            <span className="block text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold bg-gradient-to-r from-white via-white to-white/80 bg-clip-text text-transparent tracking-wide">
+              TIO AMMI
+            </span>
+          </h1>
 
-<p className="font-['Raleway'] text-center text-sm sm:text-base md:text-lg text-white/70 font-light italic tracking-wide">
-  Moda · Estilo · Tendencias
-</p>
+          <p className="font-['Raleway'] text-center text-sm sm:text-base md:text-lg text-white/70 font-light italic tracking-wide">
+            Moda · Estilo · Tendencias
+          </p>
         </motion.div>
 
         <motion.div
@@ -90,28 +88,20 @@ export default function Home({ onNavigate, onAdmin }: HomeProps) {
 
           <div className="text-center font-['Roboto'] space-y-3">
             <p className="text-gray-700 text-sm md:text-base font-medium">
-              📱 Escanea el código QR
+              📱 Escanea el código QR para ver la revista
             </p>
             <p className="text-gray-500 text-xs md:text-sm">
-              o haz clic en el botón
+              Solo administradores
             </p>
 
             <div className="flex flex-row items-center gap-2 md:gap-3 justify-center pt-2">
-              <button
-                onClick={onNavigate}
-                className="bg-[#D51F2D] hover:bg-[#28336C] text-white px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold text-xs md:text-sm flex items-center gap-1 md:gap-2 transition-all duration-200 hover:scale-105 shadow-lg flex-1 max-w-[140px] md:max-w-[160px] justify-center"
-              >
-                <BookOpen className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                <span>Ver Revista</span>
-              </button>
-
               {onAdmin && (
                 <button
                   onClick={onAdmin}
-                  className="bg-[#28336C] hover:bg-[#D51F2D] text-white px-4 md:px-6 py-2 md:py-3 rounded-lg md:rounded-xl font-semibold text-xs md:text-sm flex items-center gap-1 md:gap-2 transition-all duration-200 hover:scale-105 shadow-lg flex-1 max-w-[140px] md:max-w-[160px] justify-center"
+                  className="bg-[#28336C] hover:bg-[#D51F2D] text-white px-6 py-3 rounded-lg md:rounded-xl font-semibold text-sm md:text-base flex items-center gap-2 transition-all duration-200 hover:scale-105 shadow-lg"
                 >
-                  <UploadCloud className="w-3.5 h-3.5 md:w-4 md:h-4" />
-                  <span>Admin</span>
+                  <UploadCloud className="w-4 h-4 md:w-5 md:h-5" />
+                  <span>Panel de Administración</span>
                 </button>
               )}
             </div>

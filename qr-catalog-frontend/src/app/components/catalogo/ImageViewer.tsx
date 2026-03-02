@@ -77,7 +77,7 @@ export function ImageViewer({ src, alt }: ImageViewerProps) {
           ref={imgRef}
           src={src}
           alt={alt}
-          className="w-full h-auto object-contain select-none"
+             className="w-full h-full object-contain select-none"
           draggable={false}
         />
       </QuickPinchZoom>

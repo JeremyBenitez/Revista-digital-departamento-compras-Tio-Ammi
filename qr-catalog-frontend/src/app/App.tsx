@@ -4,32 +4,57 @@ import Catalogo from './pages/Catalogo';
 import Admin from './pages/Admin';
 
 export default function App() {
-  // Leer la ruta inicial de la URL
-  const [currentPage, setCurrentPage] = useState<'home' | 'catalogo' | 'admin'>(() => {
+  const [currentPage, setCurrentPage] = useState<'home' | 'catalogo' | 'catalogo-admin' | 'admin'>(() => {
     const path = window.location.pathname;
-    if (path === '/catalogo') return 'catalogo';
+    if (path === '/revista') return 'catalogo';
+    if (path === '/admin/revista') return 'catalogo-admin';
     if (path === '/admin') return 'admin';
     return 'home';
   });
 
-  // Actualizar la URL cuando cambia la página (opcional, para que la URL refleje el estado)
+  // Escuchar cambios en la navegación (popstate)
   useEffect(() => {
-    if (currentPage === 'home') {
-      window.history.pushState(null, '', '/');
-    } else if (currentPage === 'catalogo') {
-      window.history.pushState(null, '', '/catalogo');
-    } else if (currentPage === 'admin') {
-      window.history.pushState(null, '', '/admin');
-    }
-  }, [currentPage]);
+    const handlePopState = () => {
+      const path = window.location.pathname;
+      if (path === '/revista') {
+        setCurrentPage('catalogo');
+      } else if (path === '/admin/revista') {
+        setCurrentPage('catalogo-admin');
+      } else if (path === '/admin') {
+        setCurrentPage('admin');
+      } else {
+        setCurrentPage('home');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  const navigateTo = (path: string, page: 'home' | 'catalogo' | 'catalogo-admin' | 'admin') => {
+    window.history.pushState(null, '', path);
+    setCurrentPage(page);
+  };
 
   if (currentPage === 'catalogo') {
-    return <Catalogo onBack={() => setCurrentPage('home')} />;
+    // Revista pública: SIN botón de retroceso
+    return <Catalogo fromAdmin={false} />;
+  }
+
+  if (currentPage === 'catalogo-admin') {
+    // Revista desde admin: CON botón de retroceso
+    return <Catalogo 
+      fromAdmin={true} 
+      onBack={() => navigateTo('/admin', 'admin')} 
+    />;
   }
 
   if (currentPage === 'admin') {
-    return <Admin onBack={() => setCurrentPage('home')} />;
+    return <Admin 
+      onBack={() => navigateTo('/', 'home')} 
+      onViewCatalog={() => navigateTo('/admin/revista', 'catalogo-admin')}
+    />;
   }
 
-  return <Home onNavigate={() => setCurrentPage('catalogo')} onAdmin={() => setCurrentPage('admin')} />;
+  return <Home onNavigate={() => navigateTo('/revista', 'catalogo')} onAdmin={() => navigateTo('/admin', 'admin')} />;
 }
