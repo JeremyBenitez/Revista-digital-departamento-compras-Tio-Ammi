@@ -1,0 +1,59 @@
+﻿# Dependencias - TODO esto debe ser ignorado
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Archivos de mapa (source maps) - son enormes y no necesarios en git
+*.map
+**/*.map
+
+# Archivos binarios grandes
+*.node
+*.mjs
+*.mjs.map
+**/*.node
+**/*.mjs
+**/*.mjs.map
+
+# Archivos comprimidos y grandes
+*.tar
+*.gz
+*.zip
+*.rar
+*.7z
+*.iso
+*.img
+*.bin
+
+# Archivos de build
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Archivos de entorno
+.env
+.env.local
+.env.*.local
+
+# Cache
+.vite/
+.cache/
+.turbo/
+.eslintcache
+
+# Archivos específicos que vimos son grandes
+qr-catalog-frontend/node_modules/.vite/
+qr-catalog-frontend/node_modules/@tailwindcss/
+qr-catalog-frontend/node_modules/@rollup/
+qr-catalog-frontend/node_modules/@mui/
+qr-catalog-frontend/node_modules/lucide-react/dist/
+qr-catalog-frontend/node_modules/pdfjs-dist/
+qr-catalog-frontend/node_modules/react-pdf/node_modules/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+desktop.ini
