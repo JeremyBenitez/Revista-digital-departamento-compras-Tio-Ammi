@@ -463,6 +463,7 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
               setComentarios("");
               setSatisfaccion(0);
             }}
+            onSendToWhatsApp={sendToWhatsApp} // <-- Pasamos la función existente
           />
         ) : (
           <>

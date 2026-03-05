@@ -28,9 +28,17 @@ interface SummaryViewProps {
   onEmailChange: (value: string) => void;
   onSatisfaccionChange: (value: number) => void;
   onComentariosChange: (value: string) => void;
-  onSubmit: () => void;
+  onSubmit: () => void; // Esta función ahora solo maneja el envío al backend
   onReset: () => void;
+  isSubmitting?: boolean;
+  onSendToWhatsApp: () => void; // <-- NUEVA PROP: la función de WhatsApp del padre
 }
+
+// Detectar si es Safari
+const isSafari = () => {
+  const ua = navigator.userAgent.toLowerCase();
+  return ua.includes('safari') && !ua.includes('chrome') && !ua.includes('crios');
+};
 
 export function SummaryView({
   looks,
@@ -50,14 +58,93 @@ export function SummaryView({
   onSatisfaccionChange,
   onComentariosChange,
   onSubmit,
-  onReset
+  onReset,
+  isSubmitting = false,
+  onSendToWhatsApp // <-- Recibimos la función del padre
 }: SummaryViewProps) {
   const totalLikes = Object.values(ratings).filter(r => r === "like").length;
   const totalDislikes = Object.values(ratings).filter(r => r === "dislike").length;
 
-  // Calcular totales de todas las fotos (desde photoStats)
   const totalPhotoLikes = Object.values(photoStats).reduce((acc, curr) => acc + curr.likes, 0);
   const totalPhotoDislikes = Object.values(photoStats).reduce((acc, curr) => acc + curr.dislikes, 0);
+
+  // Función para abrir WhatsApp de manera compatible con Safari
+  const openWhatsAppSafari = () => {
+    // Llamamos a la función del padre que ya tiene toda la lógica
+    onSendToWhatsApp();
+    
+    // En Safari, a veces necesitamos un pequeño retraso
+    if (isSafari()) {
+      setTimeout(() => {
+        // Verificar si se abrió (esto es aproximado)
+        if (!document.hasFocus()) {
+          // La ventana perdió el foco, probablemente se abrió WhatsApp
+          console.log("WhatsApp abierto correctamente");
+        } else {
+          // Si no perdió el foco, mostrar opción manual
+          alert("Si WhatsApp no se abrió automáticamente, haz clic en 'Enviar manualmente'");
+        }
+      }, 1000);
+    }
+  };
+
+  // Función para copiar al portapapeles (fallback para Safari)
+  const copyToClipboard = () => {
+    // Necesitamos generar el mismo mensaje que en el padre
+    const phoneNumber = "584220127002";
+    const catalogInfo = "ACTUAL"; // Esto deberías pasarlo como prop o obtenerlo de otro lado
+    
+    let mensaje = `TIO AMMI - CATALOGO ${catalogInfo}\n`;
+    mensaje += "=================================\n\n";
+    mensaje += `NOMBRE: ${nombre || "Anonimo"}\n`;
+    mensaje += `EMAIL: ${email || "No especificado"}\n`;
+    mensaje += `SATISFACCION: ${satisfaccion}/5\n\n`;
+    
+    if (comentarios) mensaje += `COMENTARIOS:\n${comentarios}\n\n`;
+    
+    mensaje += "CALIFICACIONES DE FOTOS:\n";
+    
+    Object.entries(ratings).forEach(([photoId, rating]) => {
+      const [lookId, index] = photoId.split('_');
+      const look = looks.find(l => l._id === lookId);
+      if (look) {
+        mensaje += `- ${look.name} (Foto ${parseInt(index) + 1}): ${rating === 'like' ? '👍' : '👎'}\n`;
+      }
+    });
+    
+    mensaje += `\nVOTO GENERAL: ${generalVote === 'like' ? '👍' : generalVote === 'dislike' ? '👎' : 'No votó'}\n`;
+    mensaje += `TOTAL FOTOS: ${totalPhotoLikes} 👍 | ${totalPhotoDislikes} 👎\n\n`;
+    mensaje += new Date().toLocaleString();
+    
+    // Crear un elemento temporal
+    const textarea = document.createElement('textarea');
+    textarea.value = mensaje;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    textarea.setSelectionRange(0, 99999);
+    
+    try {
+      document.execCommand('copy');
+      alert('✅ Mensaje copiado al portapapeles!\n\nAbre WhatsApp y pégalo manualmente.');
+    } catch (err) {
+      console.error('Error al copiar:', err);
+      alert('❌ No se pudo copiar automáticamente.\n\nAquí está el mensaje:\n\n' + mensaje);
+    }
+    
+    document.body.removeChild(textarea);
+  };
+
+  const handleSubmit = () => {
+    if (isSubmitting) return;
+    
+    // Primero enviamos al backend si es necesario
+    onSubmit();
+    
+    // Luego abrimos WhatsApp con la función del padre
+    openWhatsAppSafari();
+  };
 
   return (
     <div className="flex items-center justify-center p-4 w-full h-full">
@@ -80,7 +167,7 @@ export function SummaryView({
 
         {/* VOTOS POR CADA FOTO */}
         <div className="bg-gradient-to-br from-blue-50 to-red-50 rounded-2xl p-6 mb-6">
-          <h3 className="font-semibold mb-4 text-lg text-gray-800">Votos por foto:</h3>
+          <h3 className="font-semibold mb-4 text-lg text-gray-800">Tus votos por foto:</h3>
           
           <div className="space-y-3 max-h-60 overflow-y-auto mb-4 pr-2">
             {looks.map((look) => {
@@ -127,12 +214,10 @@ export function SummaryView({
           <div className="pt-4 border-t border-gray-200">
             <div className="flex justify-around text-center">
               <div>
-                {/* <div className="text-3xl mb-1 text-green-600 font-bold">{totalLikes}</div> */}
                 <div className="text-sm text-gray-600">Fotos que te gustaron</div>
                 <div className="text-xs text-gray-400">({totalPhotoLikes} likes totales)</div>
               </div>
               <div>
-                {/* <div className="text-3xl mb-1 text-red-600 font-bold">{totalDislikes}</div> */}
                 <div className="text-sm text-gray-600">Fotos que no te gustaron</div>
                 <div className="text-xs text-gray-400">({totalPhotoDislikes} dislikes totales)</div>
               </div>
@@ -144,7 +229,7 @@ export function SummaryView({
         <div className="bg-white border-2 border-gray-200 rounded-2xl p-6 mb-6">
           <h3 className="font-bold mb-4 text-xl text-gray-800 flex items-center gap-2">
             <Heart className="w-5 h-5 text-[#D51F2D]" />
-            ¿Qué te pareció la revista?
+            ¿Qué te pareció la revista en general?
           </h3>
           
           <div className="flex gap-4 mb-4">
@@ -177,11 +262,11 @@ export function SummaryView({
           <div className="flex justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-1">
               <ThumbsUp className="w-4 h-4 text-green-500" />
-              <span>{catalogLikes} personas</span>
+              <span>{catalogLikes} personas les gustó</span>
             </div>
             <div className="flex items-center gap-1">
               <ThumbsDown className="w-4 h-4 text-red-500" />
-              <span>{catalogDislikes} personas</span>
+              <span>{catalogDislikes} personas no les gustó</span>
             </div>
           </div>
         </div>
@@ -198,18 +283,56 @@ export function SummaryView({
           onComentariosChange={onComentariosChange}
         />
 
-        {/* Botón de enviar */}
+        {/* Botón de enviar principal */}
         <button
-          onClick={onSubmit}
-          className="w-full bg-green-500 hover:bg-green-600 text-white py-4 rounded-2xl flex items-center justify-center gap-3 transition-all transform hover:scale-105 shadow-lg font-semibold"
+          onClick={handleSubmit}
+          disabled={isSubmitting}
+          className={`w-full py-4 rounded-2xl flex items-center justify-center gap-3 transition-all transform hover:scale-105 shadow-lg font-semibold ${
+            isSubmitting 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-green-500 hover:bg-green-600 text-white'
+          }`}
         >
-          <Send className="w-5 h-5" />
-          Enviar todo
+          {isSubmitting ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              Enviando...
+            </>
+          ) : (
+            <>
+              <Send className="w-5 h-5" />
+              Enviar a WhatsApp
+            </>
+          )}
         </button>
+
+        {/* Botones de respaldo para Safari */}
+        {isSafari() && (
+          <div className="space-y-2 mt-3">
+            {/* <button
+              onClick={openWhatsAppSafari}
+              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm"
+            >
+              📱 Intentar abrir WhatsApp nuevamente
+            </button>
+            
+            <button
+              onClick={copyToClipboard}
+              className="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm"
+            >
+              📋 Copiar mensaje manualmente
+            </button>
+
+            <p className="text-xs text-gray-400 text-center mt-2">
+              ⚠️ En Safari, si WhatsApp no se abre, usa "Copiar mensaje manualmente"
+            </p> */}
+          </div>
+        )}
 
         <button
           onClick={onReset}
-          className="w-full mt-3 text-[#28336C] hover:text-[#D51F2D] py-3 rounded-2xl transition-colors font-medium"
+          disabled={isSubmitting}
+          className="w-full mt-3 text-[#28336C] hover:text-[#D51F2D] py-3 rounded-2xl transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Volver a calificar
         </button>
