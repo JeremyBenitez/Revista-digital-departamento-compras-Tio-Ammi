@@ -28,13 +28,12 @@ interface SummaryViewProps {
   onEmailChange: (value: string) => void;
   onSatisfaccionChange: (value: number) => void;
   onComentariosChange: (value: string) => void;
-  onSubmit: () => void; // Esta función ahora solo maneja el envío al backend
+  onSubmit: () => void;
   onReset: () => void;
+  onSendToWhatsApp: () => void;
   isSubmitting?: boolean;
-  onSendToWhatsApp: () => void; // <-- NUEVA PROP: la función de WhatsApp del padre
 }
 
-// Detectar si es Safari
 const isSafari = () => {
   const ua = navigator.userAgent.toLowerCase();
   return ua.includes('safari') && !ua.includes('chrome') && !ua.includes('crios');
@@ -59,8 +58,8 @@ export function SummaryView({
   onComentariosChange,
   onSubmit,
   onReset,
-  isSubmitting = false,
-  onSendToWhatsApp // <-- Recibimos la función del padre
+  onSendToWhatsApp,
+  isSubmitting = false
 }: SummaryViewProps) {
   const totalLikes = Object.values(ratings).filter(r => r === "like").length;
   const totalDislikes = Object.values(ratings).filter(r => r === "dislike").length;
@@ -68,33 +67,24 @@ export function SummaryView({
   const totalPhotoLikes = Object.values(photoStats).reduce((acc, curr) => acc + curr.likes, 0);
   const totalPhotoDislikes = Object.values(photoStats).reduce((acc, curr) => acc + curr.dislikes, 0);
 
-  // Función para abrir WhatsApp de manera compatible con Safari
   const openWhatsAppSafari = () => {
-    // Llamamos a la función del padre que ya tiene toda la lógica
     onSendToWhatsApp();
     
-    // En Safari, a veces necesitamos un pequeño retraso
     if (isSafari()) {
       setTimeout(() => {
-        // Verificar si se abrió (esto es aproximado)
         if (!document.hasFocus()) {
-          // La ventana perdió el foco, probablemente se abrió WhatsApp
           console.log("WhatsApp abierto correctamente");
         } else {
-          // Si no perdió el foco, mostrar opción manual
-          alert("Si WhatsApp no se abrió automáticamente, haz clic en 'Enviar manualmente'");
+          alert("Si WhatsApp no se abrió automáticamente, usa el botón 'Copiar mensaje manualmente'");
         }
       }, 1000);
     }
   };
 
-  // Función para copiar al portapapeles (fallback para Safari)
   const copyToClipboard = () => {
-    // Necesitamos generar el mismo mensaje que en el padre
     const phoneNumber = "584220127002";
-    const catalogInfo = "ACTUAL"; // Esto deberías pasarlo como prop o obtenerlo de otro lado
     
-    let mensaje = `TIO AMMI - CATALOGO ${catalogInfo}\n`;
+    let mensaje = `TIO AMMI - CATALOGO\n`;
     mensaje += "=================================\n\n";
     mensaje += `NOMBRE: ${nombre || "Anonimo"}\n`;
     mensaje += `EMAIL: ${email || "No especificado"}\n`;
@@ -116,7 +106,6 @@ export function SummaryView({
     mensaje += `TOTAL FOTOS: ${totalPhotoLikes} 👍 | ${totalPhotoDislikes} 👎\n\n`;
     mensaje += new Date().toLocaleString();
     
-    // Crear un elemento temporal
     const textarea = document.createElement('textarea');
     textarea.value = mensaje;
     textarea.style.position = 'fixed';
@@ -130,7 +119,7 @@ export function SummaryView({
       alert('✅ Mensaje copiado al portapapeles!\n\nAbre WhatsApp y pégalo manualmente.');
     } catch (err) {
       console.error('Error al copiar:', err);
-      alert('❌ No se pudo copiar automáticamente.\n\nAquí está el mensaje:\n\n' + mensaje);
+      alert('❌ No se pudo copiar automáticamente.\n\n' + mensaje);
     }
     
     document.body.removeChild(textarea);
@@ -138,11 +127,7 @@ export function SummaryView({
 
   const handleSubmit = () => {
     if (isSubmitting) return;
-    
-    // Primero enviamos al backend si es necesario
     onSubmit();
-    
-    // Luego abrimos WhatsApp con la función del padre
     openWhatsAppSafari();
   };
 
@@ -258,7 +243,6 @@ export function SummaryView({
             </button>
           </div>
 
-          {/* Stats generales del catálogo */}
           <div className="flex justify-center gap-6 text-sm text-gray-500">
             <div className="flex items-center gap-1">
               <ThumbsUp className="w-4 h-4 text-green-500" />
@@ -309,7 +293,7 @@ export function SummaryView({
         {/* Botones de respaldo para Safari */}
         {isSafari() && (
           <div className="space-y-2 mt-3">
-            {/* <button
+            <button
               onClick={openWhatsAppSafari}
               className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm"
             >
@@ -325,7 +309,7 @@ export function SummaryView({
 
             <p className="text-xs text-gray-400 text-center mt-2">
               ⚠️ En Safari, si WhatsApp no se abre, usa "Copiar mensaje manualmente"
-            </p> */}
+            </p>
           </div>
         )}
 

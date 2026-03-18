@@ -1,19 +1,18 @@
 // components/catalogo/CatalogoContainer.tsx
-import { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
 import { Look, HistoricalCollection, ActiveCatalog } from "./types";
 import { CatalogHeader } from "./CatalogHeader";
-import { ImageViewer } from "./ImageViewer";
-import { ImageNavigation } from "./ImageNavigation";
 import { ContentSection } from "./ContentSection";
 import { SummaryView } from "./SummaryView";
+import FlipbookViewer from "./FlipbookViewer";
+import ZoomModal from "./ZoomModal";
+import LookNavigation from "./LookNavigation";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://172.21.250.6:8001';
 
 interface CatalogoContainerProps {
   onBack: () => void;
-  showBackButton?: boolean; // 👈 NUEVA PROP PARA CONTROLAR EL BOTÓN
+  showBackButton?: boolean;
 }
 
 export default function CatalogoContainer({ onBack, showBackButton = true }: CatalogoContainerProps) {
@@ -23,11 +22,11 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
   const [looks, setLooks] = useState<Look[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string>("");
+  const [pageFlipReady, setPageFlipReady] = useState(false);
   
-  // Estados para votos de fotos individuales
+  // Estados para votos
   const [ratings, setRatings] = useState<Record<string, "like" | "dislike">>({});
-  const [photoStats, setPhotoStats] = useState<Record<string, { likes: number, dislikes: number }>>({});
+  const [photoStats, setPhotoStats] = useState<Record<string, { likes: number; dislikes: number }>>({});
   const [generalVote, setGeneralVote] = useState<"like" | "dislike" | null>(null);
   
   const [showSummary, setShowSummary] = useState(false);
@@ -35,7 +34,6 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
   
   // Estados para el historial
   const [historicalCatalogs, setHistoricalCatalogs] = useState<HistoricalCollection[]>([]);
-  const [loadingHistory, setLoadingHistory] = useState(false);
   const [activeCatalog, setActiveCatalog] = useState<ActiveCatalog>({ 
     type: 'current', 
     index: -1, 
@@ -51,29 +49,32 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
   // Estado para controlar el envío de view
   const [viewRecorded, setViewRecorded] = useState<Record<string, boolean>>({});
   
-  // Refs para navegación táctil
-  const touchStartXRef = useRef<number | null>(null);
-  const touchEndXRef = useRef<number | null>(null);
+  // Estado para el modal de zoom
+  const [showZoomModal, setShowZoomModal] = useState(false);
+  const [zoomImage, setZoomImage] = useState<string>("");
 
-  // Cargar datos del catálogo actual
+  // Cargar datos
   useEffect(() => {
     fetchCurrentCatalog();
     fetchHistoricalCatalogs();
   }, []);
 
-  // Función para extraer stats de imágenes del objeto look
+  useEffect(() => {
+    if (looks.length > 0 && currentLook) {
+      setPageFlipReady(true);
+    }
+  }, [looks, currentIndex]);
+
   const extractImageStats = (look: Look) => {
     if (!look) return;
     
     const catalogId = look._id;
     const numImages = look.images.length;
-    const newStats: Record<string, { likes: number, dislikes: number }> = {};
+    const newStats: Record<string, { likes: number; dislikes: number }> = {};
     
-    // Obtener image_likes y image_dislikes del look
     const imageLikes = (look as any).image_likes || {};
     const imageDislikes = (look as any).image_dislikes || {};
     
-    // Crear stats para cada imagen
     for (let i = 0; i < numImages; i++) {
       const photoId = `${catalogId}_${i}`;
       newStats[photoId] = {
@@ -129,11 +130,11 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
       setLoading(false);
     }
   };
-
+useEffect(() => {
+  console.log("Imagen actual:", currentImageIndex, "Voto:", ratings[`${currentLook?._id}_${currentImageIndex}`]);
+}, [currentImageIndex, ratings]);
   const fetchHistoricalCatalogs = async () => {
     try {
-      setLoadingHistory(true);
-      
       const response = await fetch(`${API_BASE_URL}/catalog/history`, {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
@@ -172,8 +173,6 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
       
     } catch (err) {
       console.error('Error fetching history:', err);
-    } finally {
-      setLoadingHistory(false);
     }
   };
 
@@ -195,35 +194,6 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
     if (processedLooks.length > 0) extractImageStats(processedLooks[0]);
   };
 
-  // Manejadores táctiles
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartXRef.current = e.touches[0].clientX;
-    touchEndXRef.current = null;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndXRef.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartXRef.current && touchEndXRef.current) {
-      const deltaX = touchEndXRef.current - touchStartXRef.current;
-      if (Math.abs(deltaX) > 50) {
-        if (deltaX > 0 && currentIndex > 0) {
-          setDirection("left");
-          setCurrentIndex(prev => prev - 1);
-          setCurrentImageIndex(0);
-        } else if (deltaX < 0 && currentIndex < looks.length - 1) {
-          setDirection("right");
-          setCurrentIndex(prev => prev + 1);
-          setCurrentImageIndex(0);
-        }
-      }
-    }
-    touchStartXRef.current = null;
-    touchEndXRef.current = null;
-  };
-
   // Registrar vista
   useEffect(() => {
     const recordView = async () => {
@@ -243,46 +213,88 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
     recordView();
   }, [currentIndex, looks, viewRecorded]);
 
-  // Votar por una foto individual
-  const handleRate = async (rating: "like" | "dislike") => {
-    if (!currentLook) return;
-    
-    const catalogId = currentLook._id;
-    const imageIndex = currentImageIndex;
-    const photoId = `${catalogId}_${imageIndex}`;
-    const currentRating = ratings[photoId];
-    
-    if (currentRating === rating) return;
-    
-    const endpoint = rating === 'like' 
-      ? `${API_BASE_URL}/catalog/${catalogId}/like-image/${imageIndex}`
-      : `${API_BASE_URL}/catalog/${catalogId}/dislike-image/${imageIndex}`;
-
-    try {
-      await fetch(endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, mode: 'cors' });
-      
-      // Actualizar UI optimista
-      setPhotoStats(prev => {
-        const currentStats = prev[photoId] || { likes: 0, dislikes: 0 };
-        const newStats = { ...prev };
-        
-        if (rating === 'like') {
-          newStats[photoId] = { likes: currentStats.likes + 1, dislikes: currentStats.dislikes };
-        } else {
-          newStats[photoId] = { likes: currentStats.likes, dislikes: currentStats.dislikes + 1 };
-        }
-        return newStats;
-      });
-      
-      setRatings(prev => ({ ...prev, [photoId]: rating }));
-
-    } catch (err) {
-      console.error('❌ Error al votar:', err);
-      alert('Error al guardar tu voto');
-    }
+  // Manejadores de zoom
+  const handleOpenZoom = (image: string) => {
+    setZoomImage(image);
+    setShowZoomModal(true);
+    document.body.style.overflow = 'hidden';
   };
 
-  // Votar por el catálogo general
+  const handleCloseZoom = () => {
+    setShowZoomModal(false);
+    setZoomImage("");
+    document.body.style.overflow = 'auto';
+  };
+
+  // Votar por una foto individual
+  const handleRate = async (rating: "like" | "dislike") => {
+  if (!currentLook) return;
+  
+  // 1. Identificamos la foto exacta usando el ID del Look y el índice de imagen actual
+  const catalogId = currentLook._id;
+  const imageIndex = currentImageIndex;
+  const photoId = `${catalogId}_${imageIndex}`;
+  
+  // 2. Obtenemos el voto actual del estado para evitar duplicados
+  const currentRating = ratings[photoId];
+  
+  // Si el usuario hace clic en el mismo botón que ya marcó, no hacemos nada (o podrías quitar el voto)
+  if (currentRating === rating) return;
+  
+  // 3. Definimos el endpoint según la reacción
+  const endpoint = rating === 'like' 
+    ? `${API_BASE_URL}/catalog/${catalogId}/like-image/${imageIndex}`
+    : `${API_BASE_URL}/catalog/${catalogId}/dislike-image/${imageIndex}`;
+
+  try {
+    // 4. Actualizamos el estado de ratings INMEDIATAMENTE (Optimistic UI)
+    // Esto hace que el botón cambie de color sin esperar al servidor
+    setRatings(prev => ({ 
+      ...prev, 
+      [photoId]: rating 
+    }));
+
+    // 5. Llamada al servidor
+    const response = await fetch(endpoint, { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' }, 
+      mode: 'cors' 
+    });
+
+    if (!response.ok) throw new Error('Error al guardar el voto');
+    
+    // 6. Actualizamos los contadores visuales (Stats)
+    setPhotoStats(prev => {
+      const currentStats = prev[photoId] || { likes: 0, dislikes: 0 };
+      const newStats = { ...prev };
+      
+      // Si antes tenía el voto contrario, restamos uno al anterior y sumamos al nuevo
+      if (rating === 'like') {
+        newStats[photoId] = { 
+          likes: currentStats.likes + 1, 
+          dislikes: currentRating === 'dislike' ? Math.max(0, currentStats.dislikes - 1) : currentStats.dislikes 
+        };
+      } else {
+        newStats[photoId] = { 
+          likes: currentRating === 'like' ? Math.max(0, currentStats.likes - 1) : currentStats.likes, 
+          dislikes: currentStats.dislikes + 1 
+        };
+      }
+      return newStats;
+    });
+
+  } catch (err) {
+    console.error('❌ Error al votar:', err);
+    // Si falla el servidor, revertimos el estado visual para no engañar al usuario
+    setRatings(prev => {
+      const updated = { ...prev };
+      delete updated[photoId];
+      return updated;
+    });
+    alert('No se pudo guardar tu reacción. Intenta de nuevo.');
+  }
+};
+
   const handleGeneralVote = async (vote: "like" | "dislike") => {
     if (!currentLook) return;
     
@@ -316,25 +328,26 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
     }
   };
 
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setDirection("left");
-      setTimeout(() => {
-        setCurrentIndex(prev => prev - 1);
-        setCurrentImageIndex(0);
-      }, 300);
-    }
-  };
+  const handlePreviousLook = () => {
+  if (currentIndex > 0 && !showZoomModal) {
+    setDirection("left");
+    // Pequeño delay para permitir que la animación del flipbook termine
+    setTimeout(() => {
+      setCurrentIndex(prev => prev - 1);
+      setCurrentImageIndex(0);
+    }, 50);
+  }
+};
 
-  const handleNextImage = () => {
-    if (currentLook && currentImageIndex < currentLook.images.length - 1) {
-      setCurrentImageIndex(prev => prev + 1);
-    }
-  };
-
-  const handlePrevImage = () => {
-    if (currentImageIndex > 0) setCurrentImageIndex(prev => prev - 1);
-  };
+const handleNextLook = () => {
+  if (currentIndex < looks.length - 1 && !showZoomModal) {
+    setDirection("right");
+    setTimeout(() => {
+      setCurrentIndex(prev => prev + 1);
+      setCurrentImageIndex(0); // Esto es crucial para volver a la primera foto del siguiente look
+    }, 50);
+  }
+};
 
   const sendFeedback = async () => {
     if (!currentLook) return;
@@ -384,12 +397,12 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
       if (look) {
         if (rating === 'like') likes++;
         else dislikes++;
-        mensaje += `- ${look.name} (Foto ${parseInt(index) + 1}): ${rating === 'like' ? '👍' : '👎'}\n`;
+        mensaje += `- ${look.name} (Foto ${parseInt(index) + 1}): ${rating === 'like' ? '(Me gusta)' : '(No me gusta)'}\n`;
       }
     });
     
-    mensaje += `\nVOTO GENERAL: ${generalVote === 'like' ? '👍' : generalVote === 'dislike' ? '👎' : 'No votó'}\n`;
-    mensaje += `TOTAL FOTOS: ${likes} 👍 | ${dislikes} 👎\n\n`;
+    mensaje += `\nVOTO GENERAL: ${generalVote === 'like' ? '(Me gusta)' : generalVote === 'dislike' ? '(No me gusta)' : 'No votó'}\n`;
+    mensaje += `TOTAL FOTOS: ${likes} (Me gusta) | ${dislikes} (No me gusta)\n\n`;
     mensaje += new Date().toLocaleString();
     
     const mensajeCodificado = encodeURIComponent(mensaje);
@@ -428,12 +441,9 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
     );
   }
 
-  const currentPhotoId = `${currentLook._id}_${currentImageIndex}`;
-
   return (
     <div className="h-screen bg-gradient-to-br from-[#28336C] via-[#28336C] to-[#D51F2D] flex items-center justify-center p-2 sm:p-4 overflow-hidden">
       <div className="max-w-5xl w-full h-full flex flex-col">
-        
         {showSummary ? (
           <SummaryView
             looks={looks}
@@ -463,94 +473,69 @@ export default function CatalogoContainer({ onBack, showBackButton = true }: Cat
               setComentarios("");
               setSatisfaccion(0);
             }}
-            onSendToWhatsApp={sendToWhatsApp} // <-- Pasamos la función existente
+            onSendToWhatsApp={sendToWhatsApp}
           />
         ) : (
           <>
             <CatalogHeader 
               title={activeCatalog.title}
               onBack={onBack}
-              showBackButton={showBackButton} // 👈 PASAMOS LA PROP AL HEADER
+              showBackButton={showBackButton}
               historicalCatalogs={historicalCatalogs}
               activeCatalog={activeCatalog}
               onSelectCatalog={loadHistoricalCatalog}
               onSelectCurrent={fetchCurrentCatalog}
             />
 
-            <div 
-              className="relative flex-1 min-h-0 mb-3"
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={currentIndex}
-                  initial={{ opacity: 0, x: direction === "right" ? 100 : -100 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: direction === "right" ? -100 : 100 }}
-                  transition={{ duration: 0.3 }}
-                  className="h-full"
-                >
-                  <div className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl h-full flex flex-col">
-                    
-                    <ImageViewer
-                      src={currentLook.images[currentImageIndex]}
-                      alt={currentLook.name}
-                    />
+            <div className="relative flex-1 min-h-0 mb-3">
+              <div className="bg-white rounded-xl sm:rounded-2xl overflow-hidden shadow-2xl h-full flex flex-col">
+                
+                <FlipbookViewer
+                  images={currentLook.images}
+                  currentIndex={currentImageIndex}
+                  onPageChange={setCurrentImageIndex}
+                  onImageClick={handleOpenZoom}
+                  showZoomModal={showZoomModal}
+                />
 
-                    <ImageNavigation
-                      currentIndex={currentImageIndex}
-                      totalImages={currentLook.images.length}
-                      onPrevious={handlePrevImage}
-                      onNext={handleNextImage}
-                    />
-
-                    <ContentSection
-                      photoId={currentPhotoId}
-                      photoLikes={photoStats[currentPhotoId]?.likes || 0}
-                      photoDislikes={photoStats[currentPhotoId]?.dislikes || 0}
-                      views={currentLook?.views || 0}
-                      userVote={ratings[currentPhotoId]}
-                      onVote={handleRate}
-                      onSkip={() => {
-                        if (isLastLook) setShowSummary(true);
-                        else {
-                          setDirection("right");
-                          setTimeout(() => {
-                            setCurrentIndex(prev => prev + 1);
-                            setCurrentImageIndex(0);
-                          }, 300);
-                        }
-                      }}
-                      isLastLook={isLastLook}
-                      lookName={currentLook.name}
-                      lookMonth={currentLook.month}
-                      lookYear={currentLook.year}
-                    />
-                  </div>
-                </motion.div>
-              </AnimatePresence>
+                <ContentSection
+                  key={`section-${currentLook._id}-${currentImageIndex}`} 
+                  photoId={`${currentLook._id}_${currentImageIndex}`}
+                  photoLikes={photoStats[`${currentLook._id}_${currentImageIndex}`]?.likes || 0}
+                  photoDislikes={photoStats[`${currentLook._id}_${currentImageIndex}`]?.dislikes || 0}
+                  views={currentLook?.views || 0}
+                  // Verifica que esta línea apunte exactamente al ID de la foto actual
+                  userVote={ratings[`${currentLook._id}_${currentImageIndex}`] || null}
+                  onVote={handleRate}
+                  onSkip={() => {
+                    if (isLastLook) setShowSummary(true);
+                    else handleNextLook();
+                  }}
+                  isLastLook={isLastLook}
+                  lookName={currentLook.name}
+                  lookMonth={currentLook.month}
+                  lookYear={String(currentLook.year)}
+                />
+              </div>
             </div>
 
-            <div className="flex justify-between items-center flex-shrink-0 pb-2">
-              {currentIndex > 0 && (
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  onClick={handlePrevious}
-                  className="text-white/90 hover:text-white py-1.5 px-4 rounded-full transition-all bg-white/10 hover:bg-white/20 text-xs font-medium flex items-center gap-1"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                  <span>Anterior</span>
-                </motion.button>
-              )}
-              {/* <div className="text-white/70 text-xs sm:text-sm block md:hidden">Desliza para cambiar</div>
-              <div className="hidden md:block text-white/50 text-xs">{currentIndex + 1} / {looks.length}</div> */}
-            </div>
+            <LookNavigation
+              currentIndex={currentIndex}
+              totalLooks={looks.length}
+              onPrevious={handlePreviousLook}
+              onNext={handleNextLook}
+              onFinish={() => setShowSummary(true)}
+              disabled={showZoomModal}
+            />
           </>
         )}
       </div>
+
+      <ZoomModal
+        isOpen={showZoomModal}
+        image={zoomImage}
+        onClose={handleCloseZoom}
+      />
     </div>
   );
 }

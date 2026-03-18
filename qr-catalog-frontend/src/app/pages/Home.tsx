@@ -11,7 +11,7 @@ interface HomeProps {
 }
 
 export default function Home({ onNavigate, onAdmin }: HomeProps) {
-  const catalogoUrl = window.location.origin + "/revista";
+  const catalogoUrl = "http://172.21.250.6/revista";
   const [qrSize, setQrSize] = useState<number>(220);
 
   useEffect(() => {
