@@ -5,21 +5,21 @@ import { ArrowLeft, Calendar } from "lucide-react";
 interface CatalogHeaderProps {
   title: string;
   onBack: () => void;
-  showBackButton?: boolean; // Nueva prop
+  showBackButton?: boolean;
   historicalCatalogs: any[];
   activeCatalog: any;
   onSelectCatalog: (catalog: any, index: number) => void;
   onSelectCurrent: () => void;
 }
 
-export function CatalogHeader({ 
-  title, 
-  onBack, 
-  showBackButton = true, // Por defecto true para compatibilidad
-  historicalCatalogs, 
-  activeCatalog, 
-  onSelectCatalog, 
-  onSelectCurrent 
+export function CatalogHeader({
+  title,
+  onBack,
+  showBackButton = true,
+  historicalCatalogs,
+  activeCatalog,
+  onSelectCatalog,
+  onSelectCurrent
 }: CatalogHeaderProps) {
   return (
     <motion.div
@@ -28,26 +28,25 @@ export function CatalogHeader({
       className="flex-shrink-0 mb-3 sm:mb-4"
     >
       <div className="flex items-center justify-between mb-3">
-        {/* Botón de retroceso condicional */}
         {showBackButton ? (
           <button
             onClick={onBack}
-            className="text-white/80 hover:text-white transition-colors p-2 hover:bg-white/10 rounded-full"
+            className="bg-white/60 backdrop-blur-sm p-2 rounded-full hover:bg-white/80 transition-colors shadow-sm"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-[#5C4B4B]" />
           </button>
         ) : (
-          <div className="w-8"></div> // Espaciador para mantener el título centrado
+          <div className="w-8"></div>
         )}
-        
-        <h1 className="text-lg sm:text-xl md:text-2xl text-white font-bold">
+
+        <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-[#5C4B4B] tracking-tight">
           {title}
         </h1>
-        
-        <div className="w-8"></div> {/* Espaciador del lado derecho */}
+
+        <div className="w-8"></div>
       </div>
 
-      {/* Lista horizontal de catálogos históricos (se mantiene igual) */}
+      {/* Lista horizontal de catálogos históricos */}
       {historicalCatalogs.length > 0 && (
         <div className="mb-2 overflow-x-auto pb-1 hide-scrollbar">
           <div className="flex gap-1.5 justify-center">
@@ -56,8 +55,8 @@ export function CatalogHeader({
               onClick={onSelectCurrent}
               className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap ${
                 activeCatalog.type === 'current'
-                  ? 'bg-white text-[#28336C] shadow-md'
-                  : 'bg-white/15 text-white/90 hover:bg-white/25'
+                  ? 'bg-gradient-to-r from-[#D4A5A5] to-[#B88A7A] text-white shadow-md'
+                  : 'bg-white/80 backdrop-blur-sm text-[#5C4B4B] hover:bg-white/95 shadow-sm'
               }`}
             >
               Actual
@@ -70,11 +69,11 @@ export function CatalogHeader({
                 onClick={() => onSelectCatalog(catalog, index)}
                 className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1 ${
                   activeCatalog.type === 'historical' && activeCatalog.index === index
-                    ? 'bg-white text-[#28336C] shadow-md'
-                    : 'bg-white/15 text-white/90 hover:bg-white/25'
+                    ? 'bg-gradient-to-r from-[#D4A5A5] to-[#B88A7A] text-white shadow-md'
+                    : 'bg-white/80 backdrop-blur-sm text-[#5C4B4B] hover:bg-white/95 shadow-sm'
                 }`}
               >
-                <Calendar className="w-2.5 h-2.5" />
+                <Calendar className="w-2.5 h-2.5 text-[#0a0a0a]" />
                 {catalog.month} {catalog.year}
               </button>
             ))}

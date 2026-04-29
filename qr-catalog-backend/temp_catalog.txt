@@ -1,0 +1,15 @@
+    new_catalog = {
+            "name": name,
+            "images": saved_image_paths,
+            "video_url": video_path,
+            "is_active": True,
+            "month": month,
+            "year": year,
+            "likes": 0,
+            "dislikes": 0,
+            "views": 0,
+            "image_likes": [0] * len(saved_image_paths),
+            "image_dislikes": [0] * len(saved_image_paths),
+            "comments": [],
+            "created_at": datetime.now()
+        }

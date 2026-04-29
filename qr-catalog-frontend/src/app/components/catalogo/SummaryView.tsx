@@ -6,7 +6,8 @@ import {
   ThumbsDown, 
   Heart, 
   Star, 
-  Send 
+  Send,
+  Download // 👈 IMPORTAMOS EL ÍCONO DE DESCARGA
 } from "lucide-react";
 import { Look } from "./types";
 import { FeedbackForm } from "./FeedbackForm";
@@ -31,6 +32,7 @@ interface SummaryViewProps {
   onSubmit: () => void;
   onReset: () => void;
   onSendToWhatsApp: () => void;
+  onDownloadPDF?: () => void; // 👈 NUEVA PROP OPCIONAL
   isSubmitting?: boolean;
 }
 
@@ -59,6 +61,7 @@ export function SummaryView({
   onSubmit,
   onReset,
   onSendToWhatsApp,
+  onDownloadPDF, // 👈 NUEVA PROP
   isSubmitting = false
 }: SummaryViewProps) {
   const totalLikes = Object.values(ratings).filter(r => r === "like").length;
@@ -129,6 +132,12 @@ export function SummaryView({
     if (isSubmitting) return;
     onSubmit();
     openWhatsAppSafari();
+  };
+
+  const handleDownloadPDF = () => {
+    if (onDownloadPDF) {
+      onDownloadPDF();
+    }
   };
 
   return (
@@ -267,6 +276,18 @@ export function SummaryView({
           onComentariosChange={onComentariosChange}
         />
 
+        {/* 👇 NUEVO BOTÓN DE DESCARGA PDF 👇 */}
+        {onDownloadPDF && (
+          <button
+            onClick={handleDownloadPDF}
+            disabled={isSubmitting}
+            className="w-full py-4 rounded-2xl flex items-center justify-center gap-3 transition-all transform hover:scale-105 shadow-lg font-semibold mb-3 bg-[#28336C] hover:bg-[#1a2347] text-white"
+          >
+            <Download className="w-5 h-5" />
+            Descargar catálogo en PDF
+          </button>
+        )}
+
         {/* Botón de enviar principal */}
         <button
           onClick={handleSubmit}
@@ -288,30 +309,7 @@ export function SummaryView({
               Enviar a WhatsApp
             </>
           )}
-        </button>
-
-        {/* Botones de respaldo para Safari */}
-        {isSafari() && (
-          <div className="space-y-2 mt-3">
-            <button
-              onClick={openWhatsAppSafari}
-              className="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm"
-            >
-              📱 Intentar abrir WhatsApp nuevamente
-            </button>
-            
-            <button
-              onClick={copyToClipboard}
-              className="w-full bg-gray-500 hover:bg-gray-600 text-white py-3 rounded-xl flex items-center justify-center gap-2 transition-all text-sm"
-            >
-              📋 Copiar mensaje manualmente
-            </button>
-
-            <p className="text-xs text-gray-400 text-center mt-2">
-              ⚠️ En Safari, si WhatsApp no se abre, usa "Copiar mensaje manualmente"
-            </p>
-          </div>
-        )}
+        </button>      
 
         <button
           onClick={onReset}

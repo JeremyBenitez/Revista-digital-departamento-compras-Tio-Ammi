@@ -1,24 +1,29 @@
-# backend/dockerfile
+# qr-catalog-backend/Dockerfile
 FROM python:3.11-slim
 
 WORKDIR /app
 
-# Instalar dependencias del sistema necesarias para algunas librerías
+# Instalar dependencias del sistema necesarias
 RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
-# Copiar requirements.txt
+# Copiar requirements primero (para cachear capas)
 COPY requirements.txt .
 
-# Instalar dependencias de Python
-RUN pip install --no-cache-dir -r requirements.txt
+# Instalar dependencias Python - INCLUYENDO FPDF2
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt && \
+    pip install --no-cache-dir fpdf2  # 👈 INSTALACIÓN EXPLÍCITA
 
-# Copiar todo el código del backend
+# Verificar instalación (opcional, para depurar)
+RUN python -c "import fpdf; print('✅ FPDF instalado correctamente')"
+
+# Copiar el resto del código
 COPY . .
 
-# Crear carpeta uploads
-RUN mkdir -p uploads
+# Crear directorio para uploads
+RUN mkdir -p /app/uploads
 
 # Exponer puerto
 EXPOSE 8000

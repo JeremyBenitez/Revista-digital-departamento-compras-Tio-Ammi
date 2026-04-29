@@ -4,3 +4,4 @@ motor
 python-dotenv
 pydantic
 python-multipart
+fpdf2==2.7.9  # 👈 ASEGÚRATE QUE ESTÉ AQUÍ

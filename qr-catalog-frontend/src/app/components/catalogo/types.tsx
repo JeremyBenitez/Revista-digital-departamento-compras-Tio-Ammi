@@ -2,7 +2,8 @@
 export interface Look {
   _id: string;
   name: string;
-  images: string[];
+  images: Array<{ url: string; likes: number; dislikes: number }>;
+  video_url?: { url: string; likes: number; dislikes: number } | null;
   is_active: boolean;
   month: string;
   year: number;
