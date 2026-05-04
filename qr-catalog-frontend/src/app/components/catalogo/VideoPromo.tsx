@@ -68,11 +68,11 @@ export default function VideoPromo({
             {/* Botón con efecto de pulso intermitente */}
             <div className="relative group">
               {/* Círculo intermitente de fondo */}
-              <div className="absolute inset-0 rounded-full bg-[#D51F2D] animate-ping opacity-75"></div>
+              <div className="absolute inset-0 rounded-full bg-[#fd6d9d] animate-ping opacity-75"></div>
               
               <button
                 onClick={handleOpen}
-                className="relative bg-gradient-to-r from-[#D51F2D] to-[#28336C] text-white px-8 py-4 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center gap-3 hover:scale-110 active:scale-95 transition-all font-black text-lg border-2 border-white/20"
+                className="relative bg-gradient-to-r from-[#fa646c] to-[#ff8080] text-white px-8 py-4 rounded-full shadow-[0_0_20px_rgba(0,0,0,0.5)] flex items-center gap-3 hover:scale-110 active:scale-95 transition-all font-black text-lg border-2 border-white/20"
               >
                 <div className="bg-white text-[#D51F2D] rounded-full p-1">
                   <Play size={20} fill="currentColor" />

@@ -34,7 +34,7 @@ interface Catalog {
   created_at: string;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://10.100.39.54:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://10.100.39.54:8001';
 const UPLOAD_URL = `${API_BASE_URL}/upload-catalog/`;
 
 export default function Admin({ onBack, onViewCatalog }: AdminProps) {

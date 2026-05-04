@@ -9,7 +9,7 @@ import ZoomModal from "./ZoomModal";
 import LookNavigation from "./LookNavigation";
 import VideoPromo from "./VideoPromo";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://10.100.39.54:8000';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://10.100.39.54:8001';
 
 interface CatalogoContainerProps {
   onBack: () => void;
